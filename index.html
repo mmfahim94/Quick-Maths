@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html style = "background-color: grey;">
+<head>
+<title> Quick Maths </title>
+<link rel="stylesheet" href="styles/fm.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link href="https://fonts.googleapis.com/css?family=Luckiest+Guy" rel="stylesheet">
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-animate.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-aria.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-messages.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
+<script src="scripts/ui-bootstrap-custom-2.5.0.js"></script>
+<script src="scripts/ui-bootstrap-custom-2.5.0.min.js"></script>
+<script src="scripts/ui-bootstrap-custom-tpls-2.5.0.js"></script>
+<script src="scripts/ui-bootstrap-custom-tpls-2.5.0.min.js"></script>
+<script src="scripts/angular-local-storage.js"></script>
+</head>
+
+<body ng-app="quickMaths" style = "font-family: 'Luckiest Guy', cursive; background-color: darkgrey;">
+
+	<div ng-view></div>
+
+<script>
+var app = angular.module("quickMaths", ['ngRoute', 'ui.bootstrap', 'LocalStorageModule', 'ngMaterial']);
+
+app.config(function($routeProvider) {
+    $routeProvider
+    .when("/", {
+    	templateUrl : "templates/main.htm",
+        controller: "mainpage"
+    })
+    .when("/play", {
+        templateUrl : "templates/game.htm",
+        controller : "gamepage"
+    })
+    .when("/play20", {
+        templateUrl : "templates/game.htm",
+        controller : "gamepage2"
+    });
+});
+
+app.factory('randomNum', function(){
+	return {
+		getNum: function(){
+			return Math.floor((Math.random()*((10-1)+1) + 1));
+		},
+		getResult: function(){
+			return Math.floor((Math.random()*((20-2)+1) + 2));
+		}
+	}
+});
+
+app.service('playAudio', function(){
+	this.playRight = function(s){
+		var audio = new Audio('sounds/rightAnswer.wav');
+		if(s) {audio.play();}
+	}
+	this.playWrong = function(s){
+		var audio = new Audio('sounds/wrongAnswer.wav');
+		if(s){audio.play();}
+	}
+});
+
+app.controller("mainpage", ['$scope', '$location', '$window', function ($scope, $location, $window) {
+    $scope.go = function(hash){
+    	$location.path(hash);
+    };
+
+	$scope.toStore = function(){
+		$window.open('https://www.apple.com/ca/ios/app-store/');
+	}
+
+	$scope.toGameCenter = function(){
+		$window.open('https://developer.apple.com/game-center/');
+	}
+}]);
+
+app.controller("gamepage", ['$scope','$location', '$timeout', 'randomNum', 'localStorageService', '$uibModal', 'playAudio', function ($scope,$location,$timeout, randomNum, localStorageService, $uibModal, playAudio) {
+	$scope.score = 0;
+    $scope.time = 100;
+    $scope.t = null;
+    $scope.highScore = 0; 
+    $scope.rightAnswer = 0;
+	$scope.isOpen = false;
+	$scope.sound = true;
+
+	$scope.go = function(hash){
+    	$location.path(hash);
+    };
+
+    var generate = function(){
+		$scope.x = randomNum.getNum();
+		$scope.y = randomNum.getNum();
+		$scope.r = randomNum.getResult();
+
+  		var scoreWatch = Math.floor((Math.random()*((3-1)+1) + 1));
+  		
+  		if($scope.rightAnswer >= scoreWatch ){
+  			var a, b, c = 0;
+
+  			do{
+  				a = randomNum.getNum();
+  				b = randomNum.getNum();
+  				c = randomNum.getNum();
+  			}while(a+b != c);
+
+  			$scope.x = a;
+  			$scope.y = b;
+  			$scope.r = c;
+  			$scope.rightAnswer = 0;
+  		}
+    }	
+
+    var resetGame = function(){
+		$scope.score = 0;  					
+		$timeout.cancel($scope.t);
+		$scope.time = 100;
+		generate(); 		
+    	$scope.rightAnswer = 0;
+    }
+    
+    $scope.soundToggle = function(){
+    	if($scope.sound == true){
+    		$scope.sound = false;
+    	}
+    	else{
+    		$scope.sound = true;
+    	}
+    }
+
+    $scope.setHighScore = function(){
+		if(localStorageService.get('highScore') == null){
+			localStorageService.add('highScore', 0);	
+		}
+
+		$scope.highScore = localStorageService.get('highScore');
+		if($scope.score > $scope.highScore){    		
+			localStorageService.add('highScore', $scope.score);
+		}
+		else{
+			localStorageService.add('highScore', $scope.highScore);
+		}
+
+		$scope.highScore = localStorageService.get('highScore');
+    }
+	
+	generate();
+
+	$scope.rightB = function(){
+		$timeout.cancel($scope.t);
+  		timer();
+
+  		if($scope.x + $scope.y === $scope.r){
+  			playAudio.playRight($scope.sound);
+  			$scope.time = 109;
+  			$scope.score++;
+  			generate();
+  			$scope.rightAnswer++;
+		}
+  		else{  			
+			playAudio.playWrong($scope.sound);
+			$scope.setHighScore();	
+			if(!$scope.isOpen){open()}				
+		}
+  	}
+
+	$scope.wrongB = function(){
+	  	$timeout.cancel($scope.t);
+	  	timer();
+	  	if($scope.x + $scope.y !== $scope.r){
+	  		playAudio.playRight($scope.sound);
+	  		$scope.time = 109;
+	  		$scope.score++;
+	  		generate();
+	  		$scope.rightAnswer++;
+	  	}
+	  	else{	  	
+			playAudio.playWrong($scope.sound);	
+			$scope.setHighScore();
+			if(!$scope.isOpen){open()}
+	  	}
+	  }
+
+	var open = function () {
+		$scope.isOpen = true;
+		$timeout.cancel($scope.t);	
+		$scope.modalInstance = $uibModal.open({
+			templateUrl: 'templates/myModalContent.htm',
+			scope: $scope,
+			backdrop: 'static',
+			keyboard: false
+		});				
+    };
+		
+	$scope.ok = function () {
+		$scope.modalInstance.close('yes');
+		resetGame();
+		$scope.isOpen = false;
+	};
+
+	$scope.cancel = function () {
+		resetGame();
+		$scope.go('/');
+		$scope.modalInstance.dismiss('no');
+		$scope.isOpen = false;
+	};
+
+	var timer = function() {
+        if( $scope.time > 0 ) {
+            $scope.time -= 7;
+            $scope.t = $timeout(timer,100);
+        }
+        else{   
+			playAudio.playWrong($scope.sound);    	
+			$scope.setHighScore();
+			open();
+        }
+    }
+}]);
+
+app.controller("gamepage2", ['$scope','$location', '$interval', 'randomNum', 'localStorageService', '$uibModal', 'playAudio', function ($scope,$location,$interval,randomNum,localStorageService, $uibModal, playAudio) {
+    $scope.time = 100;
+    $scope.score = 0;
+    var start = false;    
+    $scope.highScore20 = 0;
+    $scope.rightAnswer = 0;  
+    $scope.sound = true;
+
+    $scope.go = function(hash){
+    	$location.path(hash);
+    };
+
+    var generate = function(){
+    	$scope.x = randomNum.getNum();
+  		$scope.y = randomNum.getNum();
+  		$scope.r = randomNum.getResult();
+
+  		var scoreWatch = Math.floor((Math.random()*((3-1)+1) + 1));  		
+  		if($scope.rightAnswer >= scoreWatch ){
+  			var a, b, c = 0;
+  			do{
+  				a = randomNum.getNum();
+  				b = randomNum.getNum();
+  				c = randomNum.getNum();
+  			}while(a+b != c);
+
+  			$scope.x = a;
+  			$scope.y = b;
+  			$scope.r = c;
+  			$scope.rightAnswer = 0;
+  		}
+    }
+
+    var resetGame20 = function(){
+    	start = false;
+    	$scope.time = 100;
+    	$scope.score = 0;
+    	generate();
+    	$scope.rightAnswer = 0;
+    }
+
+    $scope.soundToggle = function(){
+    	if($scope.sound == true){
+    		$scope.sound = false;
+    	}
+    	else{
+    		$scope.sound = true;
+    	}
+    }
+
+    $scope.setHighScore = function(){
+		if(localStorageService.get('highScore20') == null){
+			localStorageService.add('highScore20', 0);
+		}
+
+    	$scope.highScore20 = localStorageService.get('highScore20');
+    	if($scope.score > $scope.highScore20){    		
+    		localStorageService.add('highScore20', $scope.score);
+    	}
+    	else{
+    		localStorageService.add('highScore20', $scope.highScore20);
+    	}
+
+    	$scope.highScore20 = localStorageService.get('highScore20');
+    }
+
+    generate();
+
+	$scope.rightB = function(){
+	  	start = true;
+	  	if($scope.x + $scope.y === $scope.r){
+	  		$scope.score++;
+	  		playAudio.playRight($scope.sound);
+	  		$scope.rightAnswer++;
+		}	
+		else{
+			playAudio.playWrong($scope.sound);
+		}
+		generate();
+	}
+
+	$scope.wrongB = function(){
+	  	start = true;
+	  	if($scope.x + $scope.y !== $scope.r){
+	  		$scope.score++;
+	  		playAudio.playRight($scope.sound);
+	  		$scope.rightAnswer++;
+	  	}
+	  	else{
+	  		playAudio.playWrong($scope.sound);
+	  	}
+	  	generate();
+	}
+	
+	var open = function () {
+		$scope.modalInstance = $uibModal.open({
+			templateUrl: 'templates/myModalContent.htm',
+			scope: $scope,
+			backdrop: 'static',
+			keyboard: false
+		});		
+    };
+		
+	$scope.ok = function () {
+		$scope.modalInstance.close('yes');
+		resetGame20();
+	};
+
+	$scope.cancel = function () {
+		resetGame20();
+		$scope.go('/');
+		$scope.modalInstance.dismiss('no');		
+	};
+
+   	$interval(function(){
+    	if (start == true){
+	    	if( $scope.time > 0 ) {
+	            $scope.time -= 0.52;
+	        }
+	        else{	        	
+				playAudio.playWrong($scope.sound);
+				$scope.setHighScore();
+				start = false;
+				open();
+	        }
+    	}
+    }, 100);
+  }]);  
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<div class="mainpage container">
+	<div class = "row">
+		<div class = "col text-center header">
+			<h1 id = "title"> Quick Maths </h1>
+			<br>
+		</div>
+
+		<div class = "col playMenu">
+			<div class="text-center">
+				<button id = "game1Button" class="btn btn-primary btn-lg glyphicon glyphicon-play" ng-click="go('/play')"></button> 
+				<br><br>
+				<button style="font-family: 'Passion One', cursive;" id = "game2Button" class="btn btn-primary btn-lg" ng-click="go('/play20')">20s</button>
+			</div>
+		</div>
+		<br><br><br>
+
+		<div class = "col otherMenu text-center">
+			<button id = "awardButton" class="btn btn-primary btn-lg" ng-click="toGameCenter()">
+				<img src="./images/ribbon.png" class = "icon">
+			</button>
+			<button id = "rankButton" class="btn btn-primary  btn-lg" ng-click="toGameCenter()">
+				<img src="./images/rank.png" class = "icon">
+			</button>
+			<button id = "rateButton" class="btn btn-primary btn-lg" ng-click="toStore()">
+				<img src="./images/rate.png" class = "icon">
+			</button>
+		</div>
+	</div>
+</div>

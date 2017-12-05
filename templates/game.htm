@@ -1,0 +1,26 @@
+<div class="mainpage container">
+	<div class = "row">
+
+		<div class = "col">
+		  <md-progress-linear md-mode="determinate" value="{{ time }}"></md-progress-linear>
+		</div>
+	
+		<div class = "col header">
+			<div style = "float: left;" ng-switch on="sound">
+        		<button id = "soundOn" class="btn btn-primary btn-lg glyphicon glyphicon-volume-down" ng-switch-when='true' ng-click='soundToggle()'></button>
+       			<button id = "soundOff" class="btn btn-primary btn-lg glyphicon glyphicon-volume-off" ng-switch-when='false' ng-click='soundToggle()'></button>
+    		</div>		
+    		<h1 style = "float: right;" id = "score"> {{ score }} </h1>
+		</div>
+		<br><br><br><br><br><br>
+		<div class="col problem text-center" >
+			<h1 id = "equations" class="text-center"> {{ x }} + {{ y }} = {{ r }} </h1>
+		</div>
+		<br><br><br><br>
+		<div class="col answerButtons text-center">
+			<button id = "rightButton" class="btn btn-primary btn-lg glyphicon glyphicon-ok" ng-click=rightB()></button>
+			<button id = "wrongButton" class="btn btn-primary btn-lg btn-huge glyphicon glyphicon-remove" ng-click=wrongB()></button>
+		</div>
+
+	</div>
+</div>
